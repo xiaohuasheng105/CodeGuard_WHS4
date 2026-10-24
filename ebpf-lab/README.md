@@ -31,7 +31,7 @@ ebpf-lab/
 │   ├── busy.c  sleeper.c  # E1: 정해진 시간 동안 CPU 사용 / 잠들기
 │   ├── threads.c forks.c  # E2·E3·E4: N개 Task를 동시에 유지
 │   ├── leader_exit.c      # E4: 메인 스레드가 먼저 종료
-│   ├── forkloop.c         # E5: fork/exit 반복 마이크로벤치마크
+│   ├── forkloop.c threadloop.c execloop.c  # E5: fork·스레드 생성·exec 반복 마이크로벤치마크
 │   └── memspike.c         # E6: 짧은 메모리 급증
 ├── lab/
 │   ├── harness.py         # 실행 1회 = 모든 측정 방식을 동시에 기록
@@ -82,10 +82,10 @@ sudo systemctl start codeguard-task-tracker
 | 실험 | 비교하는 값 |
 |---|---|
 | E1 | `wall_container_ms`, `wall_gate_ms`, `wall_ebpf_ms`, `wall_self_ms` 와 목표 시간 |
-| E2 | `cg_pids_peak`, `poll_pids_100ms`, `user_task_peak` 의 반복 분포 |
+| E2 | `cg_pids_peak`, `poll_pids_100ms`, `user_task_peak` 의 반복 분포 (사용자 Task 1·4·32·64개) |
 | E3 | `poll_pids_{10,50,100}ms`, `cg_pids_peak`, `user_task_peak` 가 동시 Task 최댓값을 잡았는지 |
 | E4 | 경계 사례별 user/process/thread 값, pids 제한 동작, 준비 지연 제외 여부, 동시 실행 격리 |
-| E5 | `wall_self_ms` (측정기 등록 / 미등록 / 정지) × 동시 실행 1·2·4 |
+| E5 | forkloop·threadloop·execloop의 `wall_self_ms` (측정기 등록 / 미등록 / 정지) × 동시 실행 1·2·4 |
 | E6 | `poll_mem_{50,100}ms` / `cg_memory_peak` |
 
 ## 주의

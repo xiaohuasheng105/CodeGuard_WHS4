@@ -214,9 +214,13 @@ def run_once(cfg: RunConfig, client: docker.DockerClient | None = None,
                 row[key.lower()] = int(out[key])
 
         result_file = gate / "result.txt"
+        result_values = {}
         if result_file.exists():
-            for key, value in _parse_key_values(result_file.read_text(), " ").items():
+            result_values = _parse_key_values(result_file.read_text(), " ")
+            for key, value in result_values.items():
                 row[key] = int(value)
+        # lab-init은 6개 값을 기록한다. 6개 미만이면 분석에서 이 실행을 걸러 낼 수 있게 남긴다.
+        row["result_lines"] = len(result_values)
         return row
     finally:
         for poller in pollers.values():

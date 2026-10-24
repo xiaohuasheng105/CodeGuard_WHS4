@@ -83,6 +83,7 @@ def e1(reps: int) -> list[dict]:
 
 E2_CASES = {
     "single": ("sleeper", ["200"], (1, 1, 0)),
+    "threads3": ("threads", ["3", "200000", "0"], (4, 1, 3)),
     "threads63": ("threads", ["63", "200000", "0"], (64, 1, 63)),
     "forks31": ("forks", ["31", "200000", "0"], (32, 32, 0)),
 }
@@ -162,10 +163,23 @@ def e5(reps: int, mode: str) -> list[dict]:
     """
     use_tracker = mode == "registered"
     rows = []
-    workloads = [("forkloop", ["2000"]), ("busy", ["1000"])]
+    # 측정기는 Task 생성·exec·종료 때만 실행되므로, 그 경로를 반복하는 워크로드로 비용을 잰다.
+    # (CPU 계산만 하는 프로그램에는 tracepoint가 거의 실행되지 않아 차이가 나지 않는다.)
+    workloads = [("forkloop", ["2000"]), ("threadloop", ["5000"]), ("execloop", ["1000"])]
+
+    # 가상머신 캐시·페이지 상태를 안정시키기 위한 예열 실행 (기록하지 않음)
+    for workload, args in workloads:
+        for _ in range(2):
+            try:
+                run_once(RunConfig(workload, args, use_tracker=use_tracker))
+            except Exception:
+                pass
+
     for concurrency in (1, 2, 4):
         for rep in range(reps):
-            for workload, args in workloads:
+            order = workloads[:]
+            random.shuffle(order)
+            for workload, args in order:
                 cfg = RunConfig(workload, args, use_tracker=use_tracker)
 
                 def go(_):
